@@ -12,6 +12,7 @@ import FormularioReserva from './views/FormularioReserva';
 import MinijuegoBolosAnimado from './views/MinijuegoBolosAnimado';
 import DetalleJugadorView from './views/DetalleJugadorView';
 import { fetchJugadores } from './api/boleraApi';
+import useJugadoresAsync from './hooks/useJugadoresAsync';
 
 
 function App() {
@@ -24,6 +25,19 @@ function App() {
       { nombre: 'Ana', edad: 30, puntuaciones: [] }
     ];
   });
+
+  const { jugadores: jugadoresAsync, loading: loadingJugadoresAsync, error: errorJugadoresAsync } = useJugadoresAsync();
+  // Cuando los jugadores asíncronos se cargan, añadirlos al estado si no existen ya
+  useEffect(() => {
+    if (!loadingJugadoresAsync && !errorJugadoresAsync && Array.isArray(jugadoresAsync)) {
+      const jugadoresNoExistentes = jugadoresAsync.filter(apiJ => !jugadores.some(localJ => localJ.nombre === apiJ.nombre));
+      if (jugadoresNoExistentes.length > 0) {
+        const actualizados = [...jugadores, ...jugadoresNoExistentes];
+        setJugadores(actualizados);
+        localStorage.setItem('jugadores', JSON.stringify(actualizados));
+      }
+    }
+  }, [jugadoresAsync, loadingJugadoresAsync, errorJugadoresAsync]);
 
   // Solo una vez al entrar en la app, cargar jugadores de la API y guardarlos en localStorage si no existen
   useEffect(() => {
